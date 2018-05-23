@@ -1,0 +1,12 @@
+{
+  "name": "serverless-github-webhooks",
+  "version": "1.0.0",
+  "description": "Webhooks for handling github events",
+  "main": "handler.js",
+  "scripts": {
+    "deploy": "serverless deploy",
+    "logs": "serverless logs -f githubWebhookListener -t"
+  },
+  "author": "Matthew Kerchner",
+  "license": "MIT"
+}
