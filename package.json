@@ -6,7 +6,7 @@
   "scripts": {
     "deploy": "serverless deploy",
     "whtest": "serverless invoke -f githubWebhookListener",
-    "jiratest": "serverless invoke -f getJiraIssue -d 'NPD-655'",
+    "jiratest": "serverless invoke -f getJiraIssue -d '{\"body\":{\"key\":\"NPD-655\"}}'",
     "whlogs": "serverless logs -f githubWebhookListener -t",
     "jiralogs": "serverless logs -f getJiraIssue -t"
   },
@@ -14,5 +14,8 @@
   "license": "MIT",
   "dependencies": {
     "axios": "^0.18.0"
+  },
+  "devDependencies": {
+    "serverless": "^1.27.3"
   }
 }

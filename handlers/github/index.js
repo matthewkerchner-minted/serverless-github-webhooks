@@ -1,11 +1,13 @@
 const crypto = require('crypto');
+const ghUtils = require('../../utils/githubUtils');
+const jiraUtils = require('../../utils/jiraUtils');
 
 function signRequestBody(key, body) {
   return `sha1=${crypto.createHmac('sha1', key).update(body, 'utf-8').digest('hex')}`;
 }
 
 module.exports.githubWebhookListener = (event, context, callback) => {
-  var errMsg; // eslint-disable-line
+  let errMsg; 
   const token = process.env.GITHUB_WEBHOOK_SECRET;
   const headers = event.headers;
   const sig = headers['X-Hub-Signature'];
@@ -57,15 +59,43 @@ module.exports.githubWebhookListener = (event, context, callback) => {
       body: errMsg,
     });
   }
+
   console.log('---------------------------------');
   console.log(`Github-Event: "${githubEvent}" with action: "${event.body.action}"`);
   console.log('---------------------------------');
   console.log('Payload', event.body);
 
+  const payload = JSON.parse(req.body.payload);
+  const jiraKey = ghUtils.matchJiraIssue;
+  const jiraIssue;
+  const msg;
+
+  console.log(pullRequest);
+  console.log(jiraKey);
+
+
+  if (payload.action === 'open' || payload.action === "reopen") {
+    if (!jiraKey) {
+        errMsg = "We couldn't find a valid Jira Issue ID in your pull request.";
+        return callback(null, {
+            statusCode: 401,
+            headers: { 'Content-Type': 'text/plain' },
+            body: errMsg,
+          });
+        
+    }
+
+    console.log(`Found Jira Issue ${jiraKey}!`);
+    jiraIssue = await jiraUtils.getIssue(jiraKey);
+    console.log(jiraIssue.fields);
+
+  }
+
   const response = {
     statusCode: 200,
     body: JSON.stringify({
       input: event,
+      headers: { 'Content-Type': 'text/plain' },
     }),
   };
 
