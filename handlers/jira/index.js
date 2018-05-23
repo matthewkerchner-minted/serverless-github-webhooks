@@ -1,10 +1,10 @@
 const axios = require('axios');
 
-const client;
+let client;
 
 function authorizeClient() {
     client = axios.create({
-        baseURL: 'https://jira.mntd.net/rest/api/2/issue/',
+        baseURL: 'https://jira.mntd.net/rest/api/2/',
         auth: {
             username: process.env.JIRA_USER,
             password: process.env.JIRA_PASS
@@ -21,8 +21,14 @@ exports.isLateMergeApproved = async (key) => {
     if (!client) {
         authorizeClient();
     }
-
-    let issue = await getIssue(key);
+    
+    try {
+        let issue = await getIssue(key);
+    } catch (err) {
+        console.log(err);
+        return false;
+    }
+    
     let labels = issue.fields.labels;
 
     if (labels.includes('late_merge_approved')) {
@@ -39,16 +45,25 @@ exports.getIssue = async (key) => {
         authorizeClient();
     }
 
-    if (typeof token !== 'string') {
-        errMsg = 'Must provide a \'GITHUB_WEBHOOK_SECRET\' env variable'; 
+    if (typeof key !== 'string') {
         return {
           statusCode: 401,
           headers: { 'Content-Type': 'text/plain' },
-          body: errMsg,
+          body: 'Must provide a Jira issue key (XXX-###)'
         };
       }
 
-    let response = await client.get(key)
-    console.log(response.data);
-    return response.data;
+    try {
+        let response = await client.get(`issue/${key}`);
+        let data = response.data
+        console.log(data);
+        return data;
+    } catch (err) {
+        console.log(err);
+        return {
+            statusCode: 500,
+            headers: { 'Content-Type': 'text/plain' },
+            body: 'An error occurred while trying to get your issue data'
+        };
+    }
 }

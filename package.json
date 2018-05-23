@@ -5,8 +5,14 @@
   "main": "handler.js",
   "scripts": {
     "deploy": "serverless deploy",
-    "logs": "serverless logs -f githubWebhookListener -t"
+    "whtest": "serverless invoke -f githubWebhookListener",
+    "jiratest": "serverless invoke -f getJiraIssue -d 'NPD-655'",
+    "whlogs": "serverless logs -f githubWebhookListener -t",
+    "jiralogs": "serverless logs -f getJiraIssue -t"
   },
   "author": "Matthew Kerchner",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.18.0"
+  }
 }
