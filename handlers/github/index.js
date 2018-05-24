@@ -10,7 +10,8 @@ module.exports.githubWebhookListener = async (event, context, callback) => {
   let errMsg;
 
   const token = process.env.GITHUB_WEBHOOK_SECRET;
-  const calculatedSig = signRequestBody(token, JSON.stringify(event.body));
+  const calculatedSig = signRequestBody(token, event.body);
+  event.body = decodeURI(event.body);
   const headers = event.headers;
   const sig = headers['X-Hub-Signature'];
   const githubEvent = headers['X-GitHub-Event'];
@@ -65,7 +66,7 @@ module.exports.githubWebhookListener = async (event, context, callback) => {
   console.log('---------------------------------');
   console.log(`Github-Event: "${githubEvent}" with action: "${event.body.payload.action}"`);
   console.log('---------------------------------');
-  
+
   const payload = event.body.payload;
   const jiraKey = ghUtils.matchJiraIssue(payload.pull_request.body);
 
