@@ -5,7 +5,7 @@
   "main": "handler.js",
   "scripts": {
     "deploy": "serverless deploy",
-    "whtest": "serverless invoke -f githubWebhookListener",
+    "whtest": "serverless invoke -f githubWebhookListener -p ./test/githubPullRequest.json",
     "jiratest": "serverless invoke -f getJiraIssue -d '{\"body\":{\"key\":\"NPD-655\"}}'",
     "whlogs": "serverless logs -f githubWebhookListener -t",
     "jiralogs": "serverless logs -f getJiraIssue -t"
