@@ -65,7 +65,7 @@ module.exports.githubWebhookListener = async (event, context, callback) => {
   console.log('---------------------------------');
   console.log(`Github-Event: "${githubEvent}" with action: "${event.body.payload.action}"`);
   console.log('---------------------------------');
-
+  
   const payload = event.body.payload;
   const jiraKey = ghUtils.matchJiraIssue(payload.pull_request.body);
 

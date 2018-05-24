@@ -9,21 +9,19 @@ let authorizeClient = () => {
             username: process.env.JIRA_USER,
             password: process.env.JIRA_PASS
         }
-      });
+    });
 }
 
+// Jira Issue ID takes the form AAA-###
 const getIssue = async (key) => {
     if (!client) {
         client = authorizeClient();
     }
 
     if (typeof key !== 'string') {
-        console.log(key);
-        return {
-          statusCode: 401,
-          errMsg: 'Must provide a Jira issue key (XXX-###)'
-        };
-      }
+        console.log('Invalid Jira Issue Key: ' + key);
+        return null;
+    }
 
     try {
         let response = await client.get(`issue/${key}`);
@@ -32,10 +30,7 @@ const getIssue = async (key) => {
         return data;
     } catch (err) {
         console.log(err);
-        return {
-            statusCode: 500,
-            errMsg: 'An error occurred while trying to get your issue data'
-        };
+        return null;
     }
 }
 
