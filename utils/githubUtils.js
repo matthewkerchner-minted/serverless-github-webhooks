@@ -15,8 +15,13 @@ async function paginate (method) {
     return data;
 }
 
+async function changePRStatus (id) {
+    
+}
+
 module.exports.matchJiraIssue = function (string) {
     const regex = /[A-Z]{2,4}-[0-9]{2,5}/g; // TODO: better matching for issue numbers
-    const pullRequest = payload.pull_request;
-    const jiraKey = pullRequest.body ? pullRequest.body.match(regex)[0] : null;
+    const jiraKey = string ? string.match(regex)[0] : null;
+
+    return jiraKey;
 }

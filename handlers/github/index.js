@@ -6,14 +6,16 @@ function signRequestBody(key, body) {
   return `sha1=${crypto.createHmac('sha1', key).update(body, 'utf-8').digest('hex')}`;
 }
 
-module.exports.githubWebhookListener = (event, context, callback) => {
-  let errMsg; 
+module.exports.githubWebhookListener = async (event, context, callback) => {
+  let errMsg;
+
   const token = process.env.GITHUB_WEBHOOK_SECRET;
+  const calculatedSig = signRequestBody(token, JSON.stringify(event.body));
   const headers = event.headers;
   const sig = headers['X-Hub-Signature'];
   const githubEvent = headers['X-GitHub-Event'];
   const id = headers['X-GitHub-Delivery'];
-  const calculatedSig = signRequestBody(token, event.body);
+
 
   if (typeof token !== 'string') {
     errMsg = 'Must provide a \'GITHUB_WEBHOOK_SECRET\' env variable';
@@ -61,20 +63,17 @@ module.exports.githubWebhookListener = (event, context, callback) => {
   }
 
   console.log('---------------------------------');
-  console.log(`Github-Event: "${githubEvent}" with action: "${event.body.action}"`);
+  console.log(`Github-Event: "${githubEvent}" with action: "${event.body.payload.action}"`);
   console.log('---------------------------------');
   console.log('Payload', event.body);
 
-  const payload = JSON.parse(req.body.payload);
-  const jiraKey = ghUtils.matchJiraIssue;
-  const jiraIssue;
-  const msg;
+  const payload = event.body.payload;
+  const jiraKey = ghUtils.matchJiraIssue(payload.pull_request.body);
 
-  console.log(pullRequest);
   console.log(jiraKey);
 
 
-  if (payload.action === 'open' || payload.action === "reopen") {
+  if (payload.action === 'opened' || payload.action === "reopened") {
     if (!jiraKey) {
         errMsg = "We couldn't find a valid Jira Issue ID in your pull request.";
         return callback(null, {
@@ -86,18 +85,40 @@ module.exports.githubWebhookListener = (event, context, callback) => {
     }
 
     console.log(`Found Jira Issue ${jiraKey}!`);
-    jiraIssue = await jiraUtils.getIssue(jiraKey);
-    console.log(jiraIssue.fields);
+    const jiraIssue = await jiraUtils.getIssue(jiraKey);
 
+    if (!jiraIssue) {
+        errMsg = "We couldn't find a Jira issue that matched the ID in your pull request.";
+        return callback(null, {
+            statusCode: 401,
+            headers: { 'Content-Type': 'text/plain' },
+            body: errMsg,
+          });
+    }
+
+    const labels = jiraIssue.fields.labels || [];
+
+    if (jiraIssue.fields.labels.includes('late_merge_request')) {
+        if (!jiraIssue.fields.labels.includes('late_merge_approved')) {
+            errMsg = "Your late merge request has not yet been approved";
+            return callback(null, {
+                statusCode: 401,
+                headers: { 'Content-Type': 'text/plain' },
+                body: errMsg,
+                });
+        }
+    }
+
+    console.log(jiraIssue.fields.labels);
+    const response = {
+        statusCode: 200,
+        headers: { 'Content-Type': 'text/plain' },
+        body: { 
+            input: event,
+            data: jiraIssue
+        }
+      };
+    
+    return callback(null, response);
   }
-
-  const response = {
-    statusCode: 200,
-    body: JSON.stringify({
-      input: event,
-      headers: { 'Content-Type': 'text/plain' },
-    }),
-  };
-
-  return callback(null, response);
 };
