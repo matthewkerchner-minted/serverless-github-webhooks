@@ -23,6 +23,20 @@
                 "-d",
                 "{\"body\":{\"key\":\"NPD-655\"}}"
             ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "githubWebhookListener",
+            "program": "${workspaceFolder}/node_modules/.bin/sls",
+            "args": [
+                "invoke",
+                "local",
+                "-f",
+                "githubWebhookListener",
+                "-p",
+                "${workspaceFolder}/test/githubPullRequest.json"
+            ]
         }
     ]
 }

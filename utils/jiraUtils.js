@@ -12,35 +12,7 @@ let authorizeClient = () => {
       });
 }
 
-let isLateMergeApproved = async (key) => {
-    if (!key) {
-        console.log('No valid key provided!');
-        return false;
-    }
-
-    if (!client) {
-        client = authorizeClient();
-    }
-    
-    try {
-        let issue = await getIssue(key);
-    } catch (err) {
-        console.log(err);
-        return false;
-    }
-    
-    let labels = issue.fields.labels;
-
-    if (labels.includes('late_merge_approved')) {
-        console.log(`Late merge for key ${key} has been approved.`);
-        return true;
-    } else {
-        console.log(`Late merge for key ${key} has not yet been approved.`);
-        return false;
-    }
-}
-
-let getIssue = async (key) => {
+const getIssue = async (key) => {
     if (!client) {
         client = authorizeClient();
     }
@@ -49,8 +21,7 @@ let getIssue = async (key) => {
         console.log(key);
         return {
           statusCode: 401,
-          headers: { 'Content-Type': 'text/plain' },
-          body: 'Must provide a Jira issue key (XXX-###)'
+          errMsg: 'Must provide a Jira issue key (XXX-###)'
         };
       }
 
@@ -63,13 +34,11 @@ let getIssue = async (key) => {
         console.log(err);
         return {
             statusCode: 500,
-            headers: { 'Content-Type': 'text/plain' },
-            body: 'An error occurred while trying to get your issue data'
+            errMsg: 'An error occurred while trying to get your issue data'
         };
     }
 }
 
 module.exports = {
-    getIssue,
-    isLateMergeApproved
+    getIssue
 }
