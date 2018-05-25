@@ -35,7 +35,7 @@
                 "-f",
                 "githubWebhookListener",
                 "-p",
-                "${workspaceFolder}/test/githubPullRequest.json"
+                "${workspaceFolder}/test/urlEncodedRequest.json"
             ]
         }
     ]

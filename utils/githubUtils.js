@@ -23,6 +23,17 @@ const matchJiraIssue = (string) => {
     return jiraKey;
 }
 
+const decodeURI = (encodedString) => {
+    let decodedString = decodeURIComponent(encodedString);
+
+    // strip 'payload=' from the front of the object
+    if (decodedString.slice(0, 20).includes('=')) {
+        decodedString = decodedString.replace('payload=', '');
+    }
+
+    return JSON.parse(decodedString);
+}
+
 const handleLateMerge = (pullRequestBody) => {
 
 }
@@ -36,5 +47,6 @@ const changeStatus = async (headSHA, statusObj) => {
 module.exports = {
     handleLateMerge,
     matchJiraIssue,
-    changeStatus
+    changeStatus,
+    decodeURI
 }

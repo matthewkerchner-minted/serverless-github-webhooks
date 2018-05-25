@@ -11,7 +11,13 @@ module.exports.githubWebhookListener = async (event, context, callback) => {
 
   const token = process.env.GITHUB_WEBHOOK_SECRET;
   const calculatedSig = signRequestBody(token, event.body);
-  event.body = decodeURI(event.body);
+  console.log('Type of event.body', typeof event.body);
+  console.log('\n-------BEGIN RAW EVENT------\n');
+  console.log(event);
+  console.log('\n--------END RAW EVENT------\n');
+  event.body = ghUtils.decodeURI(event.body);
+
+  console.log(event.body);
   const headers = event.headers;
   const sig = headers['X-Hub-Signature'];
   const githubEvent = headers['X-GitHub-Event'];
@@ -64,16 +70,16 @@ module.exports.githubWebhookListener = async (event, context, callback) => {
   }
 
   console.log('---------------------------------');
-  console.log(`Github-Event: "${githubEvent}" with action: "${event.body.payload.action}"`);
+  console.log(`Github-Event: "${githubEvent}" with action: "${event.body.action}"`);
   console.log('---------------------------------');
 
-  const payload = event.body.payload;
-  const jiraKey = ghUtils.matchJiraIssue(payload.pull_request.body);
+  const { action } = event.body;
+  const jiraKey = ghUtils.matchJiraIssue(event.body.pull_request.body);
 
   console.log(jiraKey);
 
 
-  if (payload.action === 'opened' || payload.action === "reopened") {
+  if (action === 'opened' || action === "reopened") {
     if (!jiraKey) {
         errMsg = "We couldn't find a valid Jira Issue ID in your pull request.";
         return callback(null, {
