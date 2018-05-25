@@ -69,42 +69,17 @@ module.exports.githubWebhookListener = async (event, context, callback) => {
 
   const { action } = event.body;
   const pr = event.body.pull_request;
-  const jiraKey = ghUtils.matchJiraIssue(pr.body);
-  
+  const jiraIssue = await ghUtils.includesJiraIssueCheck(pr);
+
   if (['opened', 'reopened', 'synchronize'].includes(action)) {
-    if (!jiraKey) {
-        errMsg = "We couldn't find a valid Jira Issue ID in your pull request.";
-        return callback(null, {
-            statusCode: 401,
-            headers: { 'Content-Type': 'text/plain' },
-            body: errMsg,
-          });
-        
-    }
-
-    console.log(`Found Jira Issue ${jiraKey}!`);
-    const jiraIssue = await jiraUtils.getIssue(jiraKey);
-
-    if (!jiraIssue) {
-        errMsg = "We couldn't find a Jira issue that matched the ID in your pull request.";
-        return callback(null, {
-            statusCode: 401,
-            headers: { 'Content-Type': 'text/plain' },
-            body: errMsg,
-          });
-    }
-
-    const labels = jiraIssue.fields.labels || [];
-
     await ghUtils.lateMergeCheck(pr, jiraIssue);
-
-    console.log(labels);
-    const response = {
-        statusCode: 200,
-        headers: { 'Content-Type': 'text/json' },
-        body: 'Success!'
-      };
-    
-    return callback(null, response);
   }
+
+  const response = {
+    statusCode: 200,
+    headers: { 'Content-Type': 'text/json' },
+    body: 'Success!'
+  };
+
+  return callback(null, response);
 };

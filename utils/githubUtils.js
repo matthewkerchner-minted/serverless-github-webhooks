@@ -1,5 +1,6 @@
 const ghToken = process.env.GH_TOKEN;
 const axios = require('axios');
+const jiraUtils = require('./jiraUtils');
 
 const matchJiraIssue = (string) => {
     const regex = /[A-Z]{2,4}-[0-9]{2,5}/g; // TODO: better matching for issue numbers
@@ -19,13 +20,58 @@ const decodeURI = (encodedString) => {
     return JSON.parse(decodedString);
 }
 
+const includesJiraIssueCheck = async (pullRequestBody) => {
+    const url = pullRequestBody.statuses_url;
+    const jiraKey = matchJiraIssue(pullRequestBody.body);
+    const jiraIssue = jiraKey ? await jiraUtils.getIssue(jiraKey) : null;
+
+    if (!jiraKey) {
+        await postStatus(
+            url,
+            'Jira Issue Key Check',
+            'error',
+            'We couldn\'t find any Jira Issue Keys in your pull request.',
+        );
+
+        return null;
+    }
+
+    console.log(`Found Jira Issue ${jiraKey}!`);
+
+    if (!jiraIssue) {
+        await postStatus(
+            url,
+            'Jira Issue Key Check',
+            'error',
+            'Your Jira Issue Key seems to be invalid.',
+        );
+
+        return null;
+    } else {
+        await postStatus(
+            url,
+            'Jira Issue Key Check',
+            'success',
+            'We found a matching Jira Issue Key!',
+        );
+
+        return jiraIssue;
+    }
+}
+
 const lateMergeCheck = async (pullRequestBody, jiraIssue) => {
     const url = pullRequestBody.statuses_url;
 
-    if (jiraIssue.fields.labels.includes('late_merge_approved')) {
+    if (!jiraIssue) {
         return postStatus(
             url,
-            ghToken,
+            'Late Merge Check',
+            'error',
+            'We need a Jira Issue Key to check for late merge approval',
+        );
+    } else if (jiraIssue.fields.labels.includes('late_merge_approved')) {
+        return postStatus(
+            url,
             'Late Merge Check',
             'success',
             'Your late merge has been approved!',
@@ -33,7 +79,6 @@ const lateMergeCheck = async (pullRequestBody, jiraIssue) => {
     } else if (jiraIssue.fields.labels.includes('late_merge_request')) {
         return postStatus(
             url,
-            ghToken,
             'Late Merge Check',
             'error',
             'Your late merge has not yet been approved on JIRA.',
@@ -70,6 +115,7 @@ const postStatus = async (url, context, status, message) => {
 module.exports = {
     postStatus,
     lateMergeCheck,
+    includesJiraIssueCheck,
     matchJiraIssue,
     decodeURI
 }
