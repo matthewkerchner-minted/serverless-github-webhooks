@@ -12,7 +12,6 @@ module.exports.githubWebhookListener = async (event, context, callback) => {
   const token = process.env.GITHUB_WEBHOOK_SECRET;
   const calculatedSig = signRequestBody(token, event.body);
   event.body = ghUtils.decodeURI(event.body);
-  console.log(event.body);
   const headers = event.headers;
   const sig = headers['X-Hub-Signature'];
   const githubEvent = headers['X-GitHub-Event'];
@@ -69,58 +68,18 @@ module.exports.githubWebhookListener = async (event, context, callback) => {
   console.log('---------------------------------');
 
   const { action } = event.body;
-  const jiraKey = ghUtils.matchJiraIssue(event.body.pull_request.body);
+  const pr = event.body.pull_request;
+  const jiraIssue = await ghUtils.includesJiraIssueCheck(pr);
 
-  console.log(jiraKey);
-
-
-  if (action === 'opened' || action === "reopened") {
-    if (!jiraKey) {
-        errMsg = "We couldn't find a valid Jira Issue ID in your pull request.";
-        return callback(null, {
-            statusCode: 401,
-            headers: { 'Content-Type': 'text/plain' },
-            body: errMsg,
-          });
-        
-    }
-
-    console.log(`Found Jira Issue ${jiraKey}!`);
-    const jiraIssue = await jiraUtils.getIssue(jiraKey);
-
-    if (!jiraIssue) {
-        errMsg = "We couldn't find a Jira issue that matched the ID in your pull request.";
-        return callback(null, {
-            statusCode: 401,
-            headers: { 'Content-Type': 'text/plain' },
-            body: errMsg,
-          });
-    }
-
-    const labels = jiraIssue.fields.labels || [];
-
-    if (labels.includes('late_merge_request')) {
-        if (!labels.includes('late_merge_approved')) {
-            await ghUtils.handleLateMerge(event.body, jiraIssue);
-            errMsg = "Your late merge request has not yet been approved";
-            return callback(null, {
-                statusCode: 200,
-                headers: { 'Content-Type': 'text/plain' },
-                body: errMsg,
-                });
-        } else {
-
-        }
-    }
-
-    console.log(labels);
-    console.log(event.body.pull_request.head.sha);
-    const response = {
-        statusCode: 200,
-        headers: { 'Content-Type': 'text/json' },
-        body: 'Success!'
-      };
-    
-    return callback(null, response);
+  if (['opened', 'reopened', 'synchronize'].includes(action)) {
+    await ghUtils.lateMergeCheck(pr, jiraIssue);
   }
+
+  const response = {
+    statusCode: 200,
+    headers: { 'Content-Type': 'text/json' },
+    body: 'Success!'
+  };
+
+  return callback(null, response);
 };

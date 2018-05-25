@@ -1,21 +1,7 @@
-const octokit = require('@octokit/rest')();
+const ghToken = process.env.GH_TOKEN;
+const axios = require('axios');
+const jiraUtils = require('./jiraUtils');
 
-octokit.authenticate({
-    type: 'token',
-    token: process.env.GH_TOKEN
-  });
-
-// GH responses are paginated (100 max per page)
-// if necessary, get each page and concat all
-const paginate = async (method) => {
-    let response = await method({per_page: 100});
-    let {data} = response;
-    while (octokit.hasNextPage(response)) {
-        response = await octokit.getNextPage(response);
-        data = data.concat(response.data);
-    }
-    return data;
-}
 const matchJiraIssue = (string) => {
     const regex = /[A-Z]{2,4}-[0-9]{2,5}/g; // TODO: better matching for issue numbers
     const jiraKey = string ? string.match(regex)[0] : null;
@@ -34,42 +20,102 @@ const decodeURI = (encodedString) => {
     return JSON.parse(decodedString);
 }
 
-const handleLateMerge = async (pullRequestBody, jiraIssue) => {
-    const newState = {
-        state: null,
-        description: null,
-        target_url: jiraIssue.self,
-        context: "continuous-integration/jenkins"
+const includesJiraIssueCheck = async (pullRequestBody) => {
+    const url = pullRequestBody.statuses_url;
+    const jiraKey = matchJiraIssue(pullRequestBody.body);
+    const jiraIssue = jiraKey ? await jiraUtils.getIssue(jiraKey) : null;
+
+    if (!jiraKey) {
+        await postStatus(
+            url,
+            'Jira Issue Key Check',
+            'error',
+            'We couldn\'t find any Jira Issue Keys in your pull request.',
+        );
+
+        return null;
     }
 
-    if (jiraIssue.fields.labels.includes('late_merge_approved')) {
-        newState.state = 'success';
-        newState.description = 'Your late merge request was approved!';
-    } else if (jiraIssue.fields.labels.includes('late_merge_request')) {
-        newState.state = 'error';
-        newState.description = 'Your late merge request has not yet been approved.';
+    console.log(`Found Jira Issue ${jiraKey}!`);
+
+    if (!jiraIssue) {
+        await postStatus(
+            url,
+            'Jira Issue Key Check',
+            'error',
+            'Your Jira Issue Key seems to be invalid.',
+        );
+
+        return null;
     } else {
-        // TODO: Should we add a status at all? Don't want to pollute our github output.
-    }
+        await postStatus(
+            url,
+            'Jira Issue Key Check',
+            'success',
+            'We found a matching Jira Issue Key!',
+        );
 
-    const options = {
-        owner: pullRequestBody.repository.owner.login,
-        repo: pullRequestBody.repository.name,
-        sha: pullRequestBody.pull_request.head.sha,
-        state: newState
+        return jiraIssue;
     }
-
-    return await octokit.createStatus(options)
-        .then(() => {
-            console.log('Status successfully changed!');
-        })
-        .catch(err => {
-            console.log(err);
-        });
 }
 
+const lateMergeCheck = async (pullRequestBody, jiraIssue) => {
+    const url = pullRequestBody.statuses_url;
+
+    if (!jiraIssue) {
+        return postStatus(
+            url,
+            'Late Merge Check',
+            'error',
+            'We need a Jira Issue Key to check for late merge approval',
+        );
+    } else if (jiraIssue.fields.labels.includes('late_merge_approved')) {
+        return postStatus(
+            url,
+            'Late Merge Check',
+            'success',
+            'Your late merge has been approved!',
+        );
+    } else if (jiraIssue.fields.labels.includes('late_merge_request')) {
+        return postStatus(
+            url,
+            'Late Merge Check',
+            'error',
+            'Your late merge has not yet been approved on JIRA.',
+        );
+    } else {
+        // TODO: Should we add a status at all if it's not a late request? 
+        // I don't want to pollute our github output.
+        return Promise.resolve(null);
+    }
+}
+
+const postStatus = async (url, context, status, message) => {
+  return axios.post(
+    url,
+    {
+      state: status,
+      description: message,
+      context,
+    },
+    {
+      headers: {
+        Accept: 'application/vnd.github.v3+json',
+        Authorization: `token ${ghToken}`,
+      },
+    },
+  ).then(data => {
+    console.log('Success!');
+    console.log(data);
+  }).catch(err => {
+      console.log(err);
+  });
+};
+
 module.exports = {
-    handleLateMerge,
+    postStatus,
+    lateMergeCheck,
+    includesJiraIssueCheck,
     matchJiraIssue,
     decodeURI
 }
