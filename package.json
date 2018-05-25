@@ -5,8 +5,8 @@
   "main": "handler.js",
   "scripts": {
     "deploy": "serverless deploy",
-    "ghlivetest": "serverless invoke -f githubWebhookListener -p ./test/githubPullRequest.json",
-    "ghlocaltest": "serverless invoke local -f githubWebhookListener -p ./test/githubPullRequest.json",
+    "ghlivetest": "serverless invoke -f githubWebhookListener -p ./test/urlEncodedRequest.json",
+    "ghlocaltest": "serverless invoke local -f githubWebhookListener -p ./test/urlEncodedRequest.json",
     "jiratest": "serverless invoke -f getJiraIssue -d '{\"body\":{\"key\":\"NPD-655\"}}'",
     "whlogs": "serverless logs -f githubWebhookListener -t",
     "jiralogs": "serverless logs -f getJiraIssue -t"
