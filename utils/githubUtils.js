@@ -36,10 +36,20 @@ const decodeURI = (encodedString) => {
 
 const handleLateMerge = async (pullRequestBody, jiraIssue) => {
     const newState = {
-        state: "error",
+        state: null,
+        description: null,
         target_url: jiraIssue.self,
-        description: "The build succeeded!",
         context: "continuous-integration/jenkins"
+    }
+
+    if (jiraIssue.fields.labels.includes('late_merge_approved')) {
+        newState.state = 'success';
+        newState.description = 'Your late merge request was approved!';
+    } else if (jiraIssue.fields.labels.includes('late_merge_request')) {
+        newState.state = 'error';
+        newState.description = 'Your late merge request has not yet been approved.';
+    } else {
+        // TODO: Should we add a status at all? Don't want to pollute our github output.
     }
 
     const options = {
