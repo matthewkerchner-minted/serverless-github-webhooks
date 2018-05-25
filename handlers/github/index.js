@@ -69,8 +69,8 @@ module.exports.githubWebhookListener = async (event, context, callback) => {
 
   const { action } = event.body;
   const jiraKey = ghUtils.matchJiraIssue(event.body.pull_request.body);
-
-  if (action === 'opened' || action === "reopened") {
+  
+  if (['opened', 'reopened', 'synchronize'].includes(action)) {
     if (!jiraKey) {
         errMsg = "We couldn't find a valid Jira Issue ID in your pull request.";
         return callback(null, {
