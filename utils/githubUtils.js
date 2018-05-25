@@ -34,19 +34,29 @@ const decodeURI = (encodedString) => {
     return JSON.parse(decodedString);
 }
 
-const handleLateMerge = (pullRequestBody) => {
+const handleLateMerge = async (pullRequestBody, jiraIssue) => {
+    const newState = {
+        state: "error",
+        target_url: jiraIssue.self,
+        description: "The build succeeded!",
+        context: "continuous-integration/jenkins"
+    }
 
-}
+    const options = {
+        owner: pullRequestBody.repository.owner.login,
+        repo: pullRequestBody.repository.name,
+        sha: pullRequestBody.pull_request.head.sha,
+        state: newState
+    }
 
-// change status for a commit or pull request
-// pull request statuses can be referenced by the branch head commit SHA
-const changeStatus = async (headSHA, statusObj) => {
-
+    return await octokit.createStatus(options)
+        .catch(err => {
+            console.log(err)
+        });
 }
 
 module.exports = {
     handleLateMerge,
     matchJiraIssue,
-    changeStatus,
     decodeURI
 }

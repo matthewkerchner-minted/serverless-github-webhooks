@@ -11,12 +11,7 @@ module.exports.githubWebhookListener = async (event, context, callback) => {
 
   const token = process.env.GITHUB_WEBHOOK_SECRET;
   const calculatedSig = signRequestBody(token, event.body);
-  console.log('Type of event.body', typeof event.body);
-  console.log('\n-------BEGIN RAW EVENT------\n');
-  console.log(event);
-  console.log('\n--------END RAW EVENT------\n');
   event.body = ghUtils.decodeURI(event.body);
-
   console.log(event.body);
   const headers = event.headers;
   const sig = headers['X-Hub-Signature'];
@@ -106,6 +101,7 @@ module.exports.githubWebhookListener = async (event, context, callback) => {
 
     if (jiraIssue.fields.labels.includes('late_merge_request')) {
         if (!jiraIssue.fields.labels.includes('late_merge_approved')) {
+            await handleLateMerge(event.body, jiraIssue);
             errMsg = "Your late merge request has not yet been approved";
             return callback(null, {
                 statusCode: 200,
@@ -118,13 +114,11 @@ module.exports.githubWebhookListener = async (event, context, callback) => {
     }
 
     console.log(jiraIssue.fields.labels);
+    console.log(event.body.pull_request.head.sha);
     const response = {
         statusCode: 200,
         headers: { 'Content-Type': 'text/json' },
-        body: { 
-            input: event,
-            data: jiraIssue
-        }
+        body: 'Success!'
       };
     
     return callback(null, response);
