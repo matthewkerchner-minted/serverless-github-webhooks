@@ -68,7 +68,8 @@ module.exports.githubWebhookListener = async (event, context, callback) => {
   console.log('---------------------------------');
 
   const { action } = event.body;
-  const jiraKey = ghUtils.matchJiraIssue(event.body.pull_request.body);
+  const pr = event.body.pull_request;
+  const jiraKey = ghUtils.matchJiraIssue(pr.body);
   
   if (['opened', 'reopened', 'synchronize'].includes(action)) {
     if (!jiraKey) {
@@ -95,22 +96,9 @@ module.exports.githubWebhookListener = async (event, context, callback) => {
 
     const labels = jiraIssue.fields.labels || [];
 
-    if (labels.includes('late_merge_request')) {
-        if (!labels.includes('late_merge_approved')) {
-            await ghUtils.handleLateMerge(event.body, jiraIssue);
-            errMsg = "Your late merge request has not yet been approved";
-            return callback(null, {
-                statusCode: 200,
-                headers: { 'Content-Type': 'text/plain' },
-                body: errMsg,
-                });
-        } else {
-
-        }
-    }
+    await ghUtils.lateMergeCheck(pr, jiraIssue);
 
     console.log(labels);
-    console.log(event.body.pull_request.head.sha);
     const response = {
         statusCode: 200,
         headers: { 'Content-Type': 'text/json' },

@@ -1,21 +1,6 @@
-const octokit = require('@octokit/rest')();
+const ghToken = process.env.GH_TOKEN;
+const axios = require('axios');
 
-octokit.authenticate({
-    type: 'token',
-    token: process.env.GH_TOKEN
-  });
-
-// GH responses are paginated (100 max per page)
-// if necessary, get each page and concat all
-const paginate = async (method) => {
-    let response = await method({per_page: 100});
-    let {data} = response;
-    while (octokit.hasNextPage(response)) {
-        response = await octokit.getNextPage(response);
-        data = data.concat(response.data);
-    }
-    return data;
-}
 const matchJiraIssue = (string) => {
     const regex = /[A-Z]{2,4}-[0-9]{2,5}/g; // TODO: better matching for issue numbers
     const jiraKey = string ? string.match(regex)[0] : null;
@@ -34,42 +19,57 @@ const decodeURI = (encodedString) => {
     return JSON.parse(decodedString);
 }
 
-const handleLateMerge = async (pullRequestBody, jiraIssue) => {
-    const newState = {
-        state: null,
-        description: null,
-        target_url: jiraIssue.self,
-        context: "continuous-integration/jenkins"
-    }
+const lateMergeCheck = async (pullRequestBody, jiraIssue) => {
+    const url = pullRequestBody.statuses_url;
 
     if (jiraIssue.fields.labels.includes('late_merge_approved')) {
-        newState.state = 'success';
-        newState.description = 'Your late merge request was approved!';
+        return postStatus(
+            url,
+            ghToken,
+            'Late Merge Check',
+            'success',
+            'Your late merge has been approved!',
+        );
     } else if (jiraIssue.fields.labels.includes('late_merge_request')) {
-        newState.state = 'error';
-        newState.description = 'Your late merge request has not yet been approved.';
+        return postStatus(
+            url,
+            ghToken,
+            'Late Merge Check',
+            'error',
+            'Your late merge has not yet been approved on JIRA.',
+        );
     } else {
-        // TODO: Should we add a status at all? Don't want to pollute our github output.
+        // TODO: Should we add a status at all if it's not a late request? 
+        // I don't want to pollute our github output.
+        return Promise.resolve(null);
     }
-
-    const options = {
-        owner: pullRequestBody.repository.owner.login,
-        repo: pullRequestBody.repository.name,
-        sha: pullRequestBody.pull_request.head.sha,
-        state: newState
-    }
-
-    return await octokit.createStatus(options)
-        .then(() => {
-            console.log('Status successfully changed!');
-        })
-        .catch(err => {
-            console.log(err);
-        });
 }
 
+const postStatus = async (url, context, status, message) => {
+  return axios.post(
+    url,
+    {
+      state: status,
+      description: message,
+      context,
+    },
+    {
+      headers: {
+        Accept: 'application/vnd.github.v3+json',
+        Authorization: `token ${ghToken}`,
+      },
+    },
+  ).then(data => {
+    console.log('Success!');
+    console.log(data);
+  }).catch(err => {
+      console.log(err);
+  });
+};
+
 module.exports = {
-    handleLateMerge,
+    postStatus,
+    lateMergeCheck,
     matchJiraIssue,
     decodeURI
 }

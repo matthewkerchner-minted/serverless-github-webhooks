@@ -14,7 +14,6 @@
   "author": "Matthew Kerchner",
   "license": "MIT",
   "dependencies": {
-    "@octokit/rest": "^15.6.2",
     "axios": "^0.18.0"
   },
   "devDependencies": {

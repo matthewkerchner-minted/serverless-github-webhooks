@@ -3,6 +3,11 @@ service: github-webhook-listener
 provider:
   name: aws
   runtime: nodejs8.10
+  region: us-east-1
+  iamRoleStatements:
+    - Effect: Allow
+      Action: ssm:GetParameters
+      Resource: '*'
   environment:
     GITHUB_WEBHOOK_SECRET: ${env:WEBHOOK_SECRET}
     JIRA_USER: ${env:JIRA_USER}
