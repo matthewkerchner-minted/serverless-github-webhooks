@@ -3,7 +3,6 @@ const utils = require('../../utils/jiraUtils.js');
 module.exports.getIssue = async (event, context, callback) => {
     // how should the event payload be structured?
     if (typeof event === 'string') {
-        console.log(event);
         event = JSON.parse(event);
     }
 
