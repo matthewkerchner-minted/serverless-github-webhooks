@@ -60,8 +60,11 @@ const handleLateMerge = async (pullRequestBody, jiraIssue) => {
     }
 
     return await octokit.createStatus(options)
+        .then(() => {
+            console.log('Status successfully changed!');
+        })
         .catch(err => {
-            console.log(err)
+            console.log(err);
         });
 }
 
