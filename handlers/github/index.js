@@ -12,7 +12,6 @@ module.exports.githubWebhookListener = async (event, context, callback) => {
   const token = process.env.GITHUB_WEBHOOK_SECRET;
   const calculatedSig = signRequestBody(token, event.body);
   event.body = ghUtils.decodeURI(event.body);
-  console.log(event.body);
   const headers = event.headers;
   const sig = headers['X-Hub-Signature'];
   const githubEvent = headers['X-GitHub-Event'];
@@ -70,9 +69,6 @@ module.exports.githubWebhookListener = async (event, context, callback) => {
 
   const { action } = event.body;
   const jiraKey = ghUtils.matchJiraIssue(event.body.pull_request.body);
-
-  console.log(jiraKey);
-
 
   if (action === 'opened' || action === "reopened") {
     if (!jiraKey) {

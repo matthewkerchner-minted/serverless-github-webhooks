@@ -26,7 +26,6 @@ const getIssue = async (key) => {
     try {
         let response = await client.get(`issue/${key}`);
         let data = response.data
-        console.log(data);
         return data;
     } catch (err) {
         console.log(err);
