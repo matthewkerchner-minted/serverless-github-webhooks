@@ -22,14 +22,4 @@ functions:
           path: github/webhook
           method: post
           cors: true
-  getJiraIssue:
-    handler: handlers/jira/index.getIssue
-    events:
-      - http:
-          path: jira/issue
-          method: get
-          cors: true
-          request:
-            parameters:
-              key: true
 

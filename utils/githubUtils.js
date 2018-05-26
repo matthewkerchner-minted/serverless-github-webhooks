@@ -2,13 +2,6 @@ const ghToken = process.env.GH_TOKEN;
 const axios = require('axios');
 const jiraUtils = require('./jiraUtils');
 
-const matchJiraIssue = (string) => {
-    const regex = /[A-Z]{2,4}-[0-9]{2,5}/g; // TODO: better matching for issue numbers
-    const jiraKey = string ? string.match(regex)[0] : null;
-
-    return jiraKey;
-}
-
 const decodeURI = (encodedString) => {
     let decodedString = decodeURIComponent(encodedString);
 
@@ -22,7 +15,7 @@ const decodeURI = (encodedString) => {
 
 const includesJiraIssueCheck = async (pullRequestBody) => {
     const url = pullRequestBody.statuses_url;
-    const jiraKey = matchJiraIssue(pullRequestBody.body);
+    const jiraKey = jiraUtils.matchJiraIssue(pullRequestBody.body);
     const jiraIssue = jiraKey ? await jiraUtils.getIssue(jiraKey) : null;
 
     if (!jiraKey) {
@@ -86,7 +79,12 @@ const lateMergeCheck = async (pullRequestBody, jiraIssue) => {
     } else {
         // TODO: Should we add a status at all if it's not a late request? 
         // I don't want to pollute our github output.
-        return Promise.resolve(null);
+        return postStatus(
+            url,
+            'Late Merge Check',
+            'success',
+            'This doesn\'t look like a late merge to us.',
+        );
     }
 }
 
@@ -105,8 +103,7 @@ const postStatus = async (url, context, status, message) => {
       },
     },
   ).then(data => {
-    console.log('Success!');
-    console.log(data);
+    console.log('Successfully created status!');
   }).catch(err => {
       console.log(err);
   });
@@ -116,6 +113,5 @@ module.exports = {
     postStatus,
     lateMergeCheck,
     includesJiraIssueCheck,
-    matchJiraIssue,
     decodeURI
 }
