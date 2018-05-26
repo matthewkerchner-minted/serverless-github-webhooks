@@ -79,7 +79,12 @@ const lateMergeCheck = async (pullRequestBody, jiraIssue) => {
     } else {
         // TODO: Should we add a status at all if it's not a late request? 
         // I don't want to pollute our github output.
-        return Promise.resolve(null);
+        return postStatus(
+            url,
+            'Late Merge Check',
+            'success',
+            'This doesn\'t look like a late merge to us.',
+        );
     }
 }
 
@@ -98,8 +103,7 @@ const postStatus = async (url, context, status, message) => {
       },
     },
   ).then(data => {
-    console.log('Success!');
-    console.log(data);
+    console.log('Successfully created status!');
   }).catch(err => {
       console.log(err);
   });
