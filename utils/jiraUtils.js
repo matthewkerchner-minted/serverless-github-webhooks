@@ -12,6 +12,20 @@ let authorizeClient = () => {
     });
 }
 
+const matchJiraIssue = (string) => {
+    const regex = /[A-Z]{1,4}-[0-9]{1,5}/g; // TODO: better matching for issue numbers
+    let jiraKey;
+
+    try {
+        jiraKey = string.match(regex)[0];
+    } catch (err) {
+        console.log(err);
+        return null;
+    }
+
+    return jiraKey;
+}
+
 // Jira Issue ID takes the form AAA-###
 const getIssue = async (key) => {
     if (!client) {
@@ -34,5 +48,6 @@ const getIssue = async (key) => {
 }
 
 module.exports = {
-    getIssue
+    getIssue,
+    matchJiraIssue
 }
