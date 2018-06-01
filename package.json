@@ -7,9 +7,7 @@
     "deploy": "serverless deploy",
     "ghlivetest": "serverless invoke -f githubWebhookListener -p ./test/urlEncodedRequest.json",
     "ghlocaltest": "serverless invoke local -f githubWebhookListener -p ./test/urlEncodedRequest.json",
-    "jiratest": "serverless invoke -f getJiraIssue -d '{\"body\":{\"key\":\"NPD-655\"}}'",
-    "whlogs": "serverless logs -f githubWebhookListener -t",
-    "jiralogs": "serverless logs -f getJiraIssue -t"
+    "logs": "serverless logs -f githubWebhookListener -t"
   },
   "author": "Matthew Kerchner",
   "license": "MIT",
