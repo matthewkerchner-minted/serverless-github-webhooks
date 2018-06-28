@@ -13,13 +13,22 @@ provider:
     JIRA_USER: ${env:JIRA_USER}
     JIRA_PASS: ${env:JIRA_PASS}
     GH_TOKEN: ${env:GH_TOKEN}
+    SLS_DEBUG: '*'
 
 functions:
   githubWebhookListener:
-    handler: handlers/github/index.githubWebhookListener
+    handler: handlers/github/webhook.githubWebhookListener
     events:
       - http:
           path: github/webhook
           method: post
           cors: true
+  jiraDashboardUpdate:
+    handler: handlers/jira/dashboard.jiraDashboardUpdate
+    events:
+      - http:
+          path: jira/update-dashboard
+          method: get
+          cors: true
+
 

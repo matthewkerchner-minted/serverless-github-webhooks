@@ -1,6 +1,8 @@
 const ghToken = process.env.GH_TOKEN;
 const axios = require('axios');
-const jiraUtils = require('./jiraUtils');
+const JiraUtils = require('./jiraUtils');
+
+const jira = new JiraUtils();
 
 const decodeURI = (encodedString) => {
     let decodedString = decodeURIComponent(encodedString);
@@ -15,8 +17,8 @@ const decodeURI = (encodedString) => {
 
 const includesJiraIssueCheck = async (pullRequestBody) => {
     const url = pullRequestBody.statuses_url;
-    const jiraKey = jiraUtils.matchJiraIssue(pullRequestBody.body);
-    const jiraIssue = jiraKey ? await jiraUtils.getIssue(jiraKey) : null;
+    const jiraKey = jira.matchJiraIssue(pullRequestBody.body);
+    const jiraIssue = jiraKey ? await jira.getIssue(jiraKey) : null;
 
     if (!jiraKey) {
         await postStatus(
