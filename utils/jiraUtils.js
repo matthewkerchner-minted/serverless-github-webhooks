@@ -142,22 +142,33 @@ class JiraUtils {
         return this.createFilter(jql, name)
     }
 
-    matchJiraIssue(string) {
-        const regex = /[A-Z]{1,4}-[0-9]{1,5}/g; // TODO: better matching for issue numbers
-        let jiraKey;
+    matchJiraIssues(string) {
+        const regex = /(jira\.mntd\.net\/browse\/\w+-\d+)/g;
+        let jiraIssues;
     
         try {
-            jiraKey = string.match(regex)[0];
+            jiraIssues = string.match(regex);
         } catch (err) {
             console.log(err);
             return null;
         }
-    
-        return jiraKey;
+        
+        console.log('Matched Jira Issue Links in Github Commit: ' + jiraIssues);
+
+        return jiraIssues;
     }
     
+    // attempt to fetch a Jira issue by a jira.mntd.net/browse
+    // or by a jira.mntd.net/rest/api/2 url
+
+    async getIssueByURL(url) {
+        let key = url.substr(id.lastIndexOf('/') + 1);
+
+        return await this.getIssueByKey(key);
+    }
+
     // Jira Issue ID takes the form AAA-###
-    async getIssue(key) {
+    async getIssueByKey(key) {
         if (typeof key !== 'string') {
             console.log('Invalid Jira Issue Key: ' + key);
             return null;
