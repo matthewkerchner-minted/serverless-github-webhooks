@@ -66,7 +66,10 @@ module.exports.githubWebhookListener = async (event, context, callback) => {
 
   console.log('---------------------------------');
   console.log(`Github Event: "${githubEvent}" with action: "${event.body.action}"`);
-  console.log(`Pull Request: "${event.body.url}" by user: "${event.body.user.login}"`);
+  console.log(`Pull Request: "${event.body.url}"`);
+  if (event.body.user && event.body.user.login) {
+    console.log(`By user: "${event.body.user.login}"`);
+  }
   console.log('---------------------------------');
 
   if (githubEvent === 'pull_request') {
