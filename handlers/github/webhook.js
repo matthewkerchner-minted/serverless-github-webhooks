@@ -9,7 +9,7 @@ function signRequestBody(key, body) {
 
 module.exports.githubWebhookListener = async (event, context, callback) => {
   let errMsg;
-  
+
   const token = process.env.GITHUB_WEBHOOK_SECRET;
   const calculatedSig = signRequestBody(token, event.body);
   event.body = ghUtils.decodeURI(event.body);
@@ -65,13 +65,18 @@ module.exports.githubWebhookListener = async (event, context, callback) => {
   }
 
   console.log('---------------------------------');
-  console.log(`Github-Event: "${githubEvent}" with action: "${event.body.action}"`);
+  console.log(`Github Event: "${githubEvent}" with action: "${event.body.action}"`);
+  console.log(`Pull Request: "${event.body.url}" by user: "${event.body.user.login}"`);
   console.log('---------------------------------');
 
-  const { action } = event.body;
-  const pr = event.body.pull_request;
-  const jiraIssue = await ghUtils.includesJiraIssueCheck(pr);
-  await ghUtils.lateMergeCheck(pr, jiraIssue);
+  if (githubEvent === 'pull_request') {
+    const { action } = event.body;
+    const pr = event.body.pull_request;
+    const jiraIssue = await ghUtils.includesJiraIssueCheck(pr);
+    await ghUtils.lateMergeCheck(pr, jiraIssue);
+  } else {
+    console.log('Ignoring event');
+  }
 
   const response = {
     statusCode: 200,
