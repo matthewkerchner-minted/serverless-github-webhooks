@@ -5,7 +5,6 @@ const JiraUtils = require('./jiraUtils');
 const jira = new JiraUtils();
 
 const decodeURI = (encodedString) => {
-    console.log(encodedString);
     let decodedString = decodeURIComponent(encodedString);
 
     // strip 'payload=' from the front of the object
