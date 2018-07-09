@@ -1,11 +1,17 @@
 const ghToken = process.env.GH_TOKEN;
 const axios = require('axios');
-const jiraUtils = require('./jiraUtils');
+const JiraUtils = require('./jiraUtils');
+
+const jira = new JiraUtils();
+
+// TODO: refactoring badly needed
 
 const decodeURI = (encodedString) => {
     let decodedString = decodeURIComponent(encodedString);
 
     // strip 'payload=' from the front of the object
+    // this step is required in order to correctly match
+    // the url-encoded github webhook payload
     if (decodedString.slice(0, 20).includes('=')) {
         decodedString = decodedString.replace('payload=', '');
     }
@@ -15,77 +21,110 @@ const decodeURI = (encodedString) => {
 
 const includesJiraIssueCheck = async (pullRequestBody) => {
     const url = pullRequestBody.statuses_url;
-    const jiraKey = jiraUtils.matchJiraIssue(pullRequestBody.body);
-    const jiraIssue = jiraKey ? await jiraUtils.getIssue(jiraKey) : null;
+    await pendingChecks(url, 'Jira Issue Link Check');
 
-    if (!jiraKey) {
+    
+    const jiraKeys = jira.matchJiraIssues(pullRequestBody.body);
+    let jiraIssues;
+
+    if (jiraKeys && jiraKeys.length > 0) {
+        jiraIssues = await Promise.all(jiraKeys.map(key => jira.getIssueByURL(key)));
+    } else {
         await postStatus(
             url,
-            'Jira Issue Key Check',
+            'Jira Issue Link Check',
             'error',
-            'We couldn\'t find any Jira Issue Keys in your pull request.',
+            'We couldn\'t find any Jira Issue Links in your pull request.',
         );
 
         return null;
     }
 
-    console.log(`Found Jira Issue ${jiraKey}!`);
+    console.log(`Found Jira Issues: ${jiraKeys}`);
 
-    if (!jiraIssue) {
+    if (jiraIssues.length === 0) {
         await postStatus(
             url,
-            'Jira Issue Key Check',
+            'Jira Issue Link Check',
             'error',
-            'Your Jira Issue Key seems to be invalid.',
+            'Your Jira Issue Link seems to be invalid.',
         );
 
         return null;
     } else {
         await postStatus(
             url,
-            'Jira Issue Key Check',
+            'Jira Issue Link Check',
             'success',
-            'We found a matching Jira Issue Key!',
+            'Found matching Jira issue(s).',
         );
 
-        return jiraIssue;
+        return jiraIssues;
     }
 }
 
-const lateMergeCheck = async (pullRequestBody, jiraIssue) => {
+const lateMergeCheck = async (pullRequestBody, jiraIssues) => {
     const url = pullRequestBody.statuses_url;
-
-    if (!jiraIssue) {
-        return postStatus(
-            url,
-            'Late Merge Check',
-            'error',
-            'We need a Jira Issue Key to check for late merge approval',
-        );
-    } else if (jiraIssue.fields.labels.includes('late_merge_approved')) {
+    
+    // If the pull request is not targeting a release branch, we don't need to
+    // check for late merge tags and approvals.
+    if (!pullRequestBody.base.label.includes('release')) {
+        console.log('Base Branch: ' + pullRequestBody.base.label);
         return postStatus(
             url,
             'Late Merge Check',
             'success',
-            'Your late merge has been approved!',
-        );
-    } else if (jiraIssue.fields.labels.includes('late_merge_request')) {
-        return postStatus(
-            url,
-            'Late Merge Check',
-            'error',
-            'Your late merge has not yet been approved on JIRA.',
-        );
-    } else {
-        // TODO: Should we add a status at all if it's not a late request? 
-        // I don't want to pollute our github output.
-        return postStatus(
-            url,
-            'Late Merge Check',
-            'success',
-            'This doesn\'t look like a late merge to us.',
+            'Not a release branch, ignoring late merge tags.',
         );
     }
+
+    await pendingChecks(url, 'Late Merge Check');
+
+    if (!jiraIssues) {
+        return postStatus(
+            url,
+            'Late Merge Check',
+            'error',
+            'We need a valid Jira Issue Link to check for late merge approval',
+        );
+    } 
+    
+    // If we find any late merge tags in the included Jira issues, check to make sure
+    // that all of them have been approved.
+    if (jiraIssues.some(issue => issue.fields.labels.includes('late_merge_request'))) {
+        let lateMerges = jiraIssues.filter(issue => issue.fields.labels.includes('late_merge_request'));
+        let unapproved = lateMerges.filter(issue => !issue.fields.labels.includes('late_merge_approved'));
+
+        if (unapproved.length > 0) {
+            return postStatus(
+                url,
+                'Late Merge Check',
+                'error',
+                `${lateMerges.length} issues have not yet been approved for late merge.`,
+            );
+        } else {
+            return postStatus(
+                url,
+                'Late Merge Check',
+                'success',
+                'Your late merges have been approved!',
+            );
+        }
+    }
+
+    // If the PR is targeting the release branch, includes Jira issue links, and
+    // does NOT have any late merge tags associated, we're good to go!
+    return postStatus(
+        url,
+        'Late Merge Check',
+        'success',
+        'Not a late merge.',
+    );
+}
+
+const pendingChecks = async (url, context) => {
+    // Post 'in progress' status to github. Should be overwritten almost immediately by success/failure status checks.
+    return postStatus(url, context, 'pending', 'Hang on while we check your commit!');
 }
 
 const postStatus = async (url, context, status, message) => {
@@ -103,7 +142,7 @@ const postStatus = async (url, context, status, message) => {
       },
     },
   ).then(data => {
-    console.log('Successfully created status!');
+    console.log('Successfully created status!', {status, message});
   }).catch(err => {
       console.log(err);
   });

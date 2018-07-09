@@ -12,9 +12,12 @@
   "author": "Matthew Kerchner",
   "license": "MIT",
   "dependencies": {
-    "axios": "^0.18.0"
+    "aws-xray-sdk": "^1.2.0",
+    "axios": "^0.18.0",
+    "moment": "^2.22.2"
   },
   "devDependencies": {
-    "serverless": "^1.27.3"
+    "serverless": "^1.27.3",
+    "serverless-plugin-tracing": "^2.0.0"
   }
 }

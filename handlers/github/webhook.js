@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const ghUtils = require('../../utils/githubUtils');
-const jiraUtils = require('../../utils/jiraUtils');
+const awsXRay = require('aws-xray-sdk');
+const awsSdk = awsXRay.captureAWS(require('aws-sdk'));
 
 function signRequestBody(key, body) {
   return `sha1=${crypto.createHmac('sha1', key).update(body, 'utf-8').digest('hex')}`;
@@ -8,7 +9,7 @@ function signRequestBody(key, body) {
 
 module.exports.githubWebhookListener = async (event, context, callback) => {
   let errMsg;
-
+  
   const token = process.env.GITHUB_WEBHOOK_SECRET;
   const calculatedSig = signRequestBody(token, event.body);
   event.body = ghUtils.decodeURI(event.body);
@@ -70,10 +71,7 @@ module.exports.githubWebhookListener = async (event, context, callback) => {
   const { action } = event.body;
   const pr = event.body.pull_request;
   const jiraIssue = await ghUtils.includesJiraIssueCheck(pr);
-
-  if (['opened', 'reopened', 'synchronize'].includes(action)) {
-    await ghUtils.lateMergeCheck(pr, jiraIssue);
-  }
+  await ghUtils.lateMergeCheck(pr, jiraIssue);
 
   const response = {
     statusCode: 200,

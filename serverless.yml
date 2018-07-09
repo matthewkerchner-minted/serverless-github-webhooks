@@ -4,8 +4,14 @@ provider:
   name: aws
   runtime: nodejs8.10
   region: us-east-1
+  tracing: true  # enable x-ray tracing
   iamRoleStatements:
-    - Effect: Allow
+    - Effect: "Allow" # x-ray permissions
+      Action:
+        - xray:PutTelemetryRecords
+        - xray:PutTraceSegments
+      Resource: "*"
+    - Effect: Allow # SSM permissions
       Action: ssm:GetParameters
       Resource: '*'
   environment:
@@ -13,13 +19,26 @@ provider:
     JIRA_USER: ${env:JIRA_USER}
     JIRA_PASS: ${env:JIRA_PASS}
     GH_TOKEN: ${env:GH_TOKEN}
+    SLS_DEBUG: '*'
+
+plugins:
+  - serverless-plugin-tracing
 
 functions:
   githubWebhookListener:
-    handler: handlers/github/index.githubWebhookListener
+    handler: handlers/github/webhook.githubWebhookListener
     events:
       - http:
           path: github/webhook
           method: post
           cors: true
+  jiraDashboardUpdate:
+    handler: handlers/jira/dashboard.jiraDashboardUpdate
+    events:
+      - schedule: cron(0 13 ? * FRI *)
+      - http:
+          path: jira/update-dashboard
+          method: get
+          cors: true
+
 
