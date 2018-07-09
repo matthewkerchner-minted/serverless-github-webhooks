@@ -1,10 +1,10 @@
 const ghToken = process.env.GH_TOKEN;
 const axios = require('axios');
 const JiraUtils = require('./jiraUtils');
-
 const jira = new JiraUtils();
 
 // TODO: refactoring badly needed
+
 const decodeURI = (encodedString) => {
     let decodedString = decodeURIComponent(encodedString);
 
