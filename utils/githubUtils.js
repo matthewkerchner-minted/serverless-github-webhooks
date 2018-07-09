@@ -5,6 +5,7 @@ const JiraUtils = require('./jiraUtils');
 const jira = new JiraUtils();
 
 // TODO: refactoring badly needed
+
 const decodeURI = (encodedString) => {
     let decodedString = decodeURIComponent(encodedString);
 
