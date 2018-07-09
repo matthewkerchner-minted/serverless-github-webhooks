@@ -4,6 +4,7 @@ const JiraUtils = require('./jiraUtils');
 
 const jira = new JiraUtils();
 
+// TODO: refactoring badly needed
 const decodeURI = (encodedString) => {
     let decodedString = decodeURIComponent(encodedString);
 
@@ -64,6 +65,8 @@ const includesJiraIssueCheck = async (pullRequestBody) => {
 const lateMergeCheck = async (pullRequestBody, jiraIssues) => {
     const url = pullRequestBody.statuses_url;
     
+    // If the pull request is not targeting a release branch, we don't need to
+    // check for late merge tags and approvals.
     if (!pullRequestBody.base.label.includes('release')) {
         console.log('Base Branch: ' + pullRequestBody.base.label);
         return postStatus(
@@ -85,6 +88,8 @@ const lateMergeCheck = async (pullRequestBody, jiraIssues) => {
         );
     } 
     
+    // If we find any late merge tags in the included Jira issues, check to make sure
+    // that all of them have been approved.
     if (jiraIssues.some(issue => issue.fields.labels.includes('late_merge_request'))) {
         let lateMerges = jiraIssues.filter(issue => issue.fields.labels.includes('late_merge_request'));
         let unapproved = lateMerges.filter(issue => !issue.fields.labels.includes('late_merge_approved'));
@@ -106,6 +111,8 @@ const lateMergeCheck = async (pullRequestBody, jiraIssues) => {
         }
     }
 
+    // If the PR is targeting the release branch, includes Jira issue links, and
+    // does NOT have any late merge tags associated, we're good to go!
     return postStatus(
         url,
         'Late Merge Check',
@@ -115,6 +122,7 @@ const lateMergeCheck = async (pullRequestBody, jiraIssues) => {
 }
 
 const pendingChecks = async (url, context) => {
+    // Post 'in progress' status to github. Should be overwritten almost immediately by success/failure status checks.
     return postStatus(url, context, 'pending', 'Hang on while we check your commit!');
 }
 
