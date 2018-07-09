@@ -162,9 +162,8 @@ class JiraUtils {
     // or by a jira.mntd.net/rest/api/2 url
 
     async getIssueByURL(url) {
-        let key = url.substr(id.lastIndexOf('/') + 1);
-
-        return await this.getIssueByKey(key);
+        let key = url.substr(url.lastIndexOf('/') + 1);
+        return this.getIssueByKey(key);
     }
 
     // Jira Issue ID takes the form AAA-###

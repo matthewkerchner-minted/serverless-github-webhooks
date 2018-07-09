@@ -27,7 +27,7 @@ const includesJiraIssueCheck = async (pullRequestBody) => {
     let jiraIssues;
 
     if (jiraKeys && jiraKeys.length > 0) {
-        jiraIssues = await Promise.all(jiraKeys.map(jira.getIssueByURL));
+        jiraIssues = await Promise.all(jiraKeys.map(key => jira.getIssueByURL(key)));
     } else {
         await postStatus(
             url,
@@ -39,7 +39,7 @@ const includesJiraIssueCheck = async (pullRequestBody) => {
         return null;
     }
 
-    console.log(`Found Jira Issue ${jiraKey}!`);
+    console.log(`Found Jira Issues: ${jiraKeys}`);
 
     if (jiraIssues.length === 0) {
         await postStatus(
@@ -65,6 +65,16 @@ const includesJiraIssueCheck = async (pullRequestBody) => {
 const lateMergeCheck = async (pullRequestBody, jiraIssues) => {
     const url = pullRequestBody.statuses_url;
     
+    if (!pullRequestBody.base.label.includes('release')) {
+        console.log('Base Branch: ' + pullRequestBody.base.label);
+        return postStatus(
+            url,
+            'Late Merge Check',
+            'success',
+            'Not a release branch, ignoring late merge tags.',
+        );
+    }
+
     await pendingChecks(url, 'Late Merge Check');
 
     if (!jiraIssues) {
@@ -76,7 +86,7 @@ const lateMergeCheck = async (pullRequestBody, jiraIssues) => {
         );
     } 
     
-    if (jiraIssues.any(issue => issue.fields.labels.includes('late_merge_request'))) {
+    if (jiraIssues.some(issue => issue.fields.labels.includes('late_merge_request'))) {
         let lateMerges = jiraIssues.filter(issue => issue.fields.labels.includes('late_merge_request'));
         let unapproved = lateMerges.filter(issue => !issue.fields.labels.includes('late_merge_approved'));
 

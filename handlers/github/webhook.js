@@ -9,7 +9,7 @@ function signRequestBody(key, body) {
 
 module.exports.githubWebhookListener = async (event, context, callback) => {
   let errMsg;
-
+  
   const token = process.env.GITHUB_WEBHOOK_SECRET;
   const calculatedSig = signRequestBody(token, event.body);
   event.body = ghUtils.decodeURI(event.body);
