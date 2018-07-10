@@ -55,7 +55,7 @@ const includesJiraIssueCheck = async (pullRequestBody) => {
             url,
             'Jira Issue Link Check',
             'success',
-            'Found matching Jira issue(s).',
+            `Found ${jiraIssues.length} matching Jira issue(s).`,
         );
 
         return jiraIssues;
