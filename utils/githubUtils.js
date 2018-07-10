@@ -68,7 +68,6 @@ const lateMergeCheck = async (pullRequestBody, jiraIssues) => {
     // If the pull request is not targeting a release branch, we don't need to
     // check for late merge tags and approvals.
     if (!pullRequestBody.base.label.includes('release')) {
-        console.log('Base Branch: ' + pullRequestBody.base.label);
         return postStatus(
             url,
             'Late Merge Check',

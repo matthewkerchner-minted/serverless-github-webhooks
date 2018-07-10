@@ -64,17 +64,16 @@ module.exports.githubWebhookListener = async (event, context, callback) => {
     });
   }
 
+  const pr = githubEvent === 'pull_request' ? event.body.pull_request : null;
+
   console.log('---------------------------------');
-  console.log(`Github Event: "${githubEvent}" with action: "${event.body.action}"`);
-  console.log(`Pull Request: "${event.body.url}"`);
-  if (event.body.user && event.body.user.login) {
-    console.log(`By user: "${event.body.user.login}"`);
-  }
+  console.log(`Github Event: "${githubEvent}" with action: "${event.body.action ? event.body.action : 'N/A'}"`);
+  console.log(`Pull Request: "${pr ? pr.html_url : 'N/A'}"`);
+  console.log(`By user: "${pr ? pr.user.login : 'N/A'}"`);
+  console.log(`Base Branch: "${pr ? pr.base.label : 'N/A'}`);
   console.log('---------------------------------');
 
   if (githubEvent === 'pull_request') {
-    const { action } = event.body;
-    const pr = event.body.pull_request;
     const jiraIssue = await ghUtils.includesJiraIssueCheck(pr);
     await ghUtils.lateMergeCheck(pr, jiraIssue);
   } else {
