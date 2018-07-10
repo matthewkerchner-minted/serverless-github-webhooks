@@ -11,7 +11,7 @@ const decodeURI = (encodedString) => {
     // strip 'payload=' from the front of the object
     // this step is required in order to correctly match
     // the url-encoded github webhook payload
-    if (decodedString.slice(0, 20).includes('=')) {
+    if (/payload=/.test(decodedString)) {
         decodedString = decodedString.replace('payload=', '');
     }
 
