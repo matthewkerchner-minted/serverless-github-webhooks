@@ -98,7 +98,7 @@ const lateMergeCheck = async (pullRequestBody, jiraIssues) => {
                 url,
                 'Late Merge Check',
                 'error',
-                `${lateMerges.length} issues have not yet been approved for late merge.`,
+                `${unapproved.length} issues have not yet been approved for late merge.`,
             );
         } else {
             return postStatus(
