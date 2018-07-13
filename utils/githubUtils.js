@@ -65,15 +65,21 @@ const includesJiraIssueCheck = async (pullRequestBody) => {
 const lateMergeCheck = async (pullRequestBody, jiraIssues) => {
     const url = pullRequestBody.statuses_url;
     
-    // If the pull request is not targeting a release branch, we don't need to
-    // check for late merge tags and approvals.
+    /*
+        If the pull request is not targeting a release branch, we don't need to
+        check for late merge tags and approvals.
+
+        07/13/18: removed status check for non-release branches
+                  to avoid clutter on GitHub
+    */
     if (!pullRequestBody.base.label.includes('release')) {
-        return postStatus(
-            url,
-            'Late Merge Check',
-            'success',
-            'Not a release branch, ignoring late merge tags.',
-        );
+        return null;
+        // return postStatus(
+        //     url,
+        //     'Late Merge Check',
+        //     'success',
+        //     'Not a release branch, ignoring late merge tags.',
+        // );
     }
 
     await pendingChecks(url, 'Late Merge Check');
@@ -140,7 +146,7 @@ const postStatus = async (url, context, status, message) => {
       },
     },
   ).then(data => {
-    console.log('Successfully created status!', {status, message});
+    console.log('Successfully created status!', {status, message, context});
   }).catch(err => {
       console.log(err);
   });
