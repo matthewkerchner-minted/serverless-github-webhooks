@@ -155,7 +155,7 @@ class JiraUtils {
         
         console.log('Matched Jira Issue Links in Github Commit: ' + jiraIssues);
 
-        return jiraIssues;
+        return [...new Set(jiraIssues)]; // filter out duplicate issues
     }
     
     // attempt to fetch a Jira issue by a jira.mntd.net/browse

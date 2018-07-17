@@ -75,10 +75,10 @@ const lateMergeCheck = async (pullRequestBody, jiraIssues) => {
     if (!pullRequestBody.base.label.includes('release')) {
         return null;
         // return postStatus(
-        //     url,
-        //     'Late Merge Check',
+            //     url,
+            //     'Late Merge Check',
+            //     'Not a release branch, ignoring late merge tags.',
         //     'success',
-        //     'Not a release branch, ignoring late merge tags.',
         // );
     }
 
