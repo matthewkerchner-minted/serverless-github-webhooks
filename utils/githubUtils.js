@@ -1,6 +1,6 @@
 const ghToken = process.env.GH_TOKEN;
-const axios = require('axios');
 const JiraUtils = require('./jiraUtils');
+const axios = require('axios');
 const jira = new JiraUtils();
 
 // TODO: refactoring badly needed
