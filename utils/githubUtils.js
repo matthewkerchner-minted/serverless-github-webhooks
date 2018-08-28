@@ -117,12 +117,13 @@ const lateMergeCheck = async (pullRequestBody, jiraIssues) => {
     }
 
     // If the PR is targeting the release branch, includes Jira issue links, and
-    // does NOT have any late merge tags associated, we're good to go!
+    // does NOT have any late merge tags associated, we need to block the issue and ask
+    // the dev to associate it with a late merge tag.
     return postStatus(
         url,
         'Late Merge Check',
-        'success',
-        'Not a late merge.',
+        'error',
+        'This is a release branch. Please add the late_merge_request tag to your JIRA ticket and e-mail latemerge@minted.com',
     );
 }
 
