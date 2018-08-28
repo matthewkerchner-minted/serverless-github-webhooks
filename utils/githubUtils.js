@@ -123,7 +123,7 @@ const lateMergeCheck = async (pullRequestBody, jiraIssues) => {
         url,
         'Late Merge Check',
         'error',
-        'This is a release branch. Please add the late_merge_request tag to your JIRA ticket and e-mail latemerge@minted.com',
+        'Please add the late_merge_request tag to your JIRA ticket.',
     );
 }
 
