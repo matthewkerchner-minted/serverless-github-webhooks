@@ -18,6 +18,19 @@ const decodeURI = (encodedString) => {
     return JSON.parse(decodedString);
 }
 
+const getPullRequestFromIssue = async (issue) => {
+    const { url } = issue.pull_request;
+    return axios.get(
+        url,
+        { 
+            headers: {
+                Accept: 'application/vnd.github.v3+json',
+                Authorization: `token ${ghToken}`,
+            },
+        }
+    );
+}
+
 const includesJiraIssueCheck = async (pullRequestBody) => {
     const url = pullRequestBody.statuses_url;
     await pendingChecks(url, 'Jira Issue Link Check');
@@ -154,8 +167,9 @@ const postStatus = async (url, context, status, message) => {
 };
 
 module.exports = {
+    decodeURI,
     postStatus,
     lateMergeCheck,
     includesJiraIssueCheck,
-    decodeURI
+    getPullRequestFromIssue
 }

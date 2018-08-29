@@ -64,7 +64,13 @@ module.exports.githubWebhookListener = async (event, context, callback) => {
     });
   }
 
-  const pr = githubEvent === 'pull_request' ? event.body.pull_request : null;
+  let pr;
+
+  if (githubEvent === 'issue_comment' && event.body.action === 'created') {
+    pr = await ghUtils.getPullRequestFromIssue(event.body.issue);
+  } else if (githubEvent === 'pull_request') {
+    pr = event.body.pull_request;
+  }
 
   console.log('---------------------------------');
   console.log(`Github Event: "${githubEvent}" with action: "${event.body.action ? event.body.action : 'N/A'}"`);
@@ -73,7 +79,7 @@ module.exports.githubWebhookListener = async (event, context, callback) => {
   console.log(`Base Branch: "${pr ? pr.base.label : 'N/A'}`);
   console.log('---------------------------------');
 
-  if (githubEvent === 'pull_request') {
+  if (pr) {
     const jiraIssue = await ghUtils.includesJiraIssueCheck(pr);
     await ghUtils.lateMergeCheck(pr, jiraIssue);
   } else {
