@@ -68,6 +68,7 @@ module.exports.githubWebhookListener = async (event, context, callback) => {
 
   if (githubEvent === 'issue_comment' && event.body.action === 'created') {
     pr = await ghUtils.getPullRequestFromIssue(event.body.issue);
+    console.log(pr);
   } else if (githubEvent === 'pull_request') {
     pr = event.body.pull_request;
   }

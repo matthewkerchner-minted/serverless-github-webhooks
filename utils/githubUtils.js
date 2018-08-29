@@ -20,7 +20,7 @@ const decodeURI = (encodedString) => {
 
 const getPullRequestFromIssue = async (issue) => {
     const { url } = issue.pull_request;
-    return axios.get(
+    const res = await axios.get(
         url,
         { 
             headers: {
@@ -29,6 +29,8 @@ const getPullRequestFromIssue = async (issue) => {
             },
         }
     );
+
+    return res.data;
 }
 
 const includesJiraIssueCheck = async (pullRequestBody) => {
