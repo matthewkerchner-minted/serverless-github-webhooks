@@ -3,9 +3,6 @@ const moment = require('moment');
 
 class JiraUtils {
     constructor(user = process.env.JIRA_USER, pass = process.env.JIRA_PASS) {
-        this.APPROVALS_FILTER_ID = 12338;
-        this.REQUESTS_FILTER_ID = 12337;
-        this.ALL_ITEMS_FILTER_ID = 12339;
         this.RE_DASHBOARD_ID = 11136;
 
         this.client = axios.create({
@@ -94,52 +91,8 @@ class JiraUtils {
             .catch(err => {
                 console.log(err);
             });
-        
-        console.log(res.data);
 
         return res ? res.data : null;
-    }
-    
-    async updateLateRequestFilter(prefix='') {
-        let jql = `fixVersion in (release-${this.getDateCode()}) AND labels in (late_merge_request)`;
-        let name = prefix + `Late Merge Requests for Release ${this.getDateMMDD()}`;
-
-        return this.editFilter(this.REQUESTS_FILTER_ID, jql, name);
-    }   
-
-    async updateLateApprovedFilter(prefix='') {
-        let jql = `fixVersion in (release-${this.getDateCode()}) AND labels in (late_merge_approved)`;
-        let name = prefix + `Late Merge Approvals for Release ${this.getDateMMDD()}`;
-
-        return this.editFilter(this.APPROVALS_FILTER_ID, jql, name)
-    }
-
-    async updateReleaseItemFilter(prefix='') {
-        let jql = `fixVersion in (release-${this.getDateCode()})`;
-        let name = prefix + `Issues in Release ${this.getDateMMDD()}`;
-
-        return this.editFilter(this.ALL_ITEMS_FILTER_ID, jql, name)
-    }
-
-    async createLateRequestFilter(prefix='') {
-        let jql = `fixVersion in (release-${this.getDateCode()}) AND labels in (late_merge_request)`;
-        let name = prefix + `Late Merge Requests for Release ${this.getDateMMDD()}`;
-
-        return this.createFilter(jql, name)
-    }   
-
-    async createLateApprovedFilter(prefix='') {
-        let jql = `fixVersion in (release-${this.getDateCode()}) AND labels in (late_merge_approved)`;
-        let name = prefix + `Late Merge Approvals for Release ${this.getDateMMDD()}`;
-
-        return this.createFilter(jql, name)
-    }
-
-    async createReleaseItemFilter(prefix='') {
-        let jql = `fixVersion in (release-${this.getDateCode()}) AND labels in (late_merge_request)`;
-        let name = prefix + `Issues in Release ${this.getDateMMDD()}`;
-
-        return this.createFilter(jql, name)
     }
 
     matchJiraIssues(string) {
