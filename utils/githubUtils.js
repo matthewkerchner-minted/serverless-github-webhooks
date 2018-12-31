@@ -1,5 +1,5 @@
 const ghToken = process.env.GH_TOKEN;
-const JiraUtils = require('./jiraUtils');
+const JiraUtils = require('./jira/index.js');
 const axios = require('axios');
 const jira = new JiraUtils();
 
@@ -55,6 +55,9 @@ const includesJiraIssueCheck = async (pullRequestBody) => {
     }
 
     console.log(`Found Jira Issues: ${jiraKeys}`);
+
+    // bad requests return null, filter out nulls
+    // jiraIssues = jiraIssues.filter(issue => issue !== null);
 
     if (jiraIssues.length === 0) {
         await postStatus(

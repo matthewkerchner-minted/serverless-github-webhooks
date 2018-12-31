@@ -6,7 +6,7 @@ class JiraUtils {
         this.RE_DASHBOARD_ID = 11136;
 
         this.client = axios.create({
-            baseURL: 'https://jira.mntd.net/rest/api/2/',
+            baseURL: 'https://minted.atlassian.net/rest/api/2/',
             auth: {
                 username: user,
                 password: pass

@@ -8,7 +8,7 @@ module.exports.releaseBranches = async (event, context, callback) => {
     let monoBranch = 'release-' + dateCode;
     let puppetBranch = 'puppetrelease-' + dateCode;
 
-
+    console.log(dateCode, appRendererBranch, monoBranch, puppetBranch);
 
     const response = {
         statusCode: 200,
@@ -18,10 +18,3 @@ module.exports.releaseBranches = async (event, context, callback) => {
 
     return callback(null, response);
 };
-
-jiraUtils = new JiraUtils();
-let dateCode = jiraUtils.getDateCode();
-let appRendererBranch = 'app_renderer_release-' + dateCode;
-let monoBranch = 'release-' + dateCode;
-let puppetBranch = 'puppetrelease-' + dateCode;
-console.log(dateCode, appRendererBranch, monoBranch, puppetBranch);
