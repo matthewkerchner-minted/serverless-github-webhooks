@@ -96,7 +96,7 @@ class JiraUtils {
     }
 
     matchJiraIssues(string) {
-        const regex = /(jira\.mntd\.net\/browse\/\w+-\d+)/g;
+        const regex = /(minted\.atlassian\.net\/browse\/\w+-\d+)/g;
         let jiraIssues;
     
         try {

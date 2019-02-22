@@ -14,7 +14,8 @@
   "dependencies": {
     "aws-xray-sdk": "^1.2.0",
     "axios": "^0.18.0",
-    "moment": "^2.22.2"
+    "moment": "^2.22.2",
+    "npm": "^6.7.0"
   },
   "devDependencies": {
     "serverless": "^1.30.1",

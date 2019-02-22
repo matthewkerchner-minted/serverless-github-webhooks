@@ -39,5 +39,5 @@ functions:
           path: jira/update-dashboard
           method: get
           cors: true
-
+      - schedule: cron(0 13 ? * FRI *)
 

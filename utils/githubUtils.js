@@ -29,7 +29,8 @@ const getPullRequestFromIssue = async (issue) => {
             },
         }
     );
-
+    
+    console.log(ghToken);
     return res.data;
 }
 
