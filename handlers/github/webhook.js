@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const ghUtils = require('../../utils/githubUtils');
-const jiraUtils = require('../../utils/jiraUtils');
+const awsXRay = require('aws-xray-sdk');
+const awsSdk = awsXRay.captureAWS(require('aws-sdk'));
 
 function signRequestBody(key, body) {
   return `sha1=${crypto.createHmac('sha1', key).update(body, 'utf-8').digest('hex')}`;
@@ -12,7 +13,6 @@ module.exports.githubWebhookListener = async (event, context, callback) => {
   const token = process.env.GITHUB_WEBHOOK_SECRET;
   const calculatedSig = signRequestBody(token, event.body);
   event.body = ghUtils.decodeURI(event.body);
-  console.log(event.body);
   const headers = event.headers;
   const sig = headers['X-Hub-Signature'];
   const githubEvent = headers['X-GitHub-Event'];
@@ -64,63 +64,33 @@ module.exports.githubWebhookListener = async (event, context, callback) => {
     });
   }
 
-  console.log('---------------------------------');
-  console.log(`Github-Event: "${githubEvent}" with action: "${event.body.action}"`);
-  console.log('---------------------------------');
+  let pr;
 
-  const { action } = event.body;
-  const jiraKey = ghUtils.matchJiraIssue(event.body.pull_request.body);
-
-  console.log(jiraKey);
-
-
-  if (action === 'opened' || action === "reopened") {
-    if (!jiraKey) {
-        errMsg = "We couldn't find a valid Jira Issue ID in your pull request.";
-        return callback(null, {
-            statusCode: 401,
-            headers: { 'Content-Type': 'text/plain' },
-            body: errMsg,
-          });
-        
-    }
-
-    console.log(`Found Jira Issue ${jiraKey}!`);
-    const jiraIssue = await jiraUtils.getIssue(jiraKey);
-
-    if (!jiraIssue) {
-        errMsg = "We couldn't find a Jira issue that matched the ID in your pull request.";
-        return callback(null, {
-            statusCode: 401,
-            headers: { 'Content-Type': 'text/plain' },
-            body: errMsg,
-          });
-    }
-
-    const labels = jiraIssue.fields.labels || [];
-
-    if (labels.includes('late_merge_request')) {
-        if (!labels.includes('late_merge_approved')) {
-            await ghUtils.handleLateMerge(event.body, jiraIssue);
-            errMsg = "Your late merge request has not yet been approved";
-            return callback(null, {
-                statusCode: 200,
-                headers: { 'Content-Type': 'text/plain' },
-                body: errMsg,
-                });
-        } else {
-
-        }
-    }
-
-    console.log(labels);
-    console.log(event.body.pull_request.head.sha);
-    const response = {
-        statusCode: 200,
-        headers: { 'Content-Type': 'text/json' },
-        body: 'Success!'
-      };
-    
-    return callback(null, response);
+  if (githubEvent === 'issue_comment' && event.body.action === 'created') {
+    pr = await ghUtils.getPullRequestFromIssue(event.body.issue);
+  } else if (githubEvent === 'pull_request') {
+    pr = event.body.pull_request;
   }
+
+  console.log('---------------------------------');
+  console.log(`Github Event: "${githubEvent}" with action: "${event.body.action ? event.body.action : 'N/A'}"`);
+  console.log(`Pull Request: "${pr ? pr.html_url : 'N/A'}"`);
+  console.log(`By user: "${pr ? pr.user.login : 'N/A'}"`);
+  console.log(`Base Branch: "${pr ? pr.base.label : 'N/A'}`);
+  console.log('---------------------------------');
+
+  if (pr) {
+    const jiraIssue = await ghUtils.includesJiraIssueCheck(pr);
+    await ghUtils.lateMergeCheck(pr, jiraIssue);
+  } else {
+    console.log('Ignoring event');
+  }
+
+  const response = {
+    statusCode: 200,
+    headers: { 'Content-Type': 'text/json' },
+    body: 'Success!'
+  };
+
+  return callback(null, response);
 };

@@ -7,17 +7,19 @@
     "deploy": "serverless deploy",
     "ghlivetest": "serverless invoke -f githubWebhookListener -p ./test/urlEncodedRequest.json",
     "ghlocaltest": "serverless invoke local -f githubWebhookListener -p ./test/urlEncodedRequest.json",
-    "jiratest": "serverless invoke -f getJiraIssue -d '{\"body\":{\"key\":\"NPD-655\"}}'",
-    "whlogs": "serverless logs -f githubWebhookListener -t",
-    "jiralogs": "serverless logs -f getJiraIssue -t"
+    "logs": "serverless logs -f githubWebhookListener -t"
   },
   "author": "Matthew Kerchner",
   "license": "MIT",
   "dependencies": {
-    "@octokit/rest": "^15.6.2",
-    "axios": "^0.18.0"
+    "aws-xray-sdk": "^1.2.0",
+    "axios": "^0.18.0",
+    "axios-logger": "^1.0.0",
+    "moment": "^2.22.2",
+    "npm": "^6.7.0"
   },
   "devDependencies": {
-    "serverless": "^1.27.3"
+    "serverless": "^1.38.0",
+    "serverless-plugin-tracing": "^2.0.0"
   }
 }

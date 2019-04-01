@@ -3,28 +3,41 @@ service: github-webhook-listener
 provider:
   name: aws
   runtime: nodejs8.10
+  region: us-east-1
+  tracing: true  # enable x-ray tracing
+  iamRoleStatements:
+    - Effect: "Allow" # x-ray permissions
+      Action:
+        - xray:PutTelemetryRecords
+        - xray:PutTraceSegments
+      Resource: "*"
+    - Effect: Allow # SSM permissions
+      Action: ssm:GetParameters
+      Resource: '*'
   environment:
     GITHUB_WEBHOOK_SECRET: ${env:WEBHOOK_SECRET}
-    JIRA_USER: ${env:JIRA_USER}
-    JIRA_PASS: ${env:JIRA_PASS}
+    JIRA_EMAIL: ${env:JIRA_EMAIL}
+    JIRA_TOKEN: ${env:JIRA_TOKEN}
     GH_TOKEN: ${env:GH_TOKEN}
+    SLS_DEBUG: '*'
+
+plugins:
+  - serverless-plugin-tracing
 
 functions:
   githubWebhookListener:
-    handler: handlers/github/index.githubWebhookListener
+    handler: handlers/github/webhook.githubWebhookListener
     events:
       - http:
           path: github/webhook
           method: post
           cors: true
-  getJiraIssue:
-    handler: handlers/jira/index.getIssue
+  jiraDashboardUpdate:
+    handler: handlers/jira/dashboard.jiraDashboardUpdate
     events:
       - http:
-          path: jira/issue
+          path: jira/update-dashboard
           method: get
           cors: true
-          request:
-            parameters:
-              key: true
+      - schedule: cron(0 13 ? * FRI *)
 
