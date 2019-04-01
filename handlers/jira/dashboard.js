@@ -10,6 +10,7 @@ module.exports.jiraDashboardUpdate = async (event, context, callback) => {
     release.updateLateApprovedFilter(),
     release.updateLateRequestFilter(),
     release.updateReleaseItemFilter(),
+    release.updateInProgressFilter(),
     qa.updateAllBugs(),
     qa.updateInQA()
   ];

@@ -1,5 +1,4 @@
 const JiraUtils = require('./index.js');
-
 const Jira = new JiraUtils();
 const ALL_BUGS_FILTER_ID = 12503;
 const IN_QA_FILTER_ID = 12504;

@@ -16,8 +16,8 @@ provider:
       Resource: '*'
   environment:
     GITHUB_WEBHOOK_SECRET: ${env:WEBHOOK_SECRET}
-    JIRA_USER: ${env:JIRA_USER}
-    JIRA_PASS: ${env:JIRA_PASS}
+    JIRA_EMAIL: ${env:JIRA_EMAIL}
+    JIRA_TOKEN: ${env:JIRA_TOKEN}
     GH_TOKEN: ${env:GH_TOKEN}
     SLS_DEBUG: '*'
 

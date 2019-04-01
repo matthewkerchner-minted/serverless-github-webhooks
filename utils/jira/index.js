@@ -1,17 +1,19 @@
 const axios = require('axios');
 const moment = require('moment');
+const AxiosLogger = require('axios-logger');
 
 class JiraUtils {
-    constructor(user = process.env.JIRA_USER, pass = process.env.JIRA_PASS) {
+    constructor(email = process.env.JIRA_EMAIL, token = process.env.JIRA_TOKEN) {
         this.RE_DASHBOARD_ID = 11136;
 
         this.client = axios.create({
             baseURL: 'https://minted.atlassian.net/rest/api/2/',
             auth: {
-                username: user,
-                password: pass
-            }
+                username: email,
+                password: token
+              },
         });
+        this.client.interceptors.request.use(AxiosLogger.requestLogger, AxiosLogger.errorLogger);
     }
 
     getDateCode() {
@@ -96,23 +98,29 @@ class JiraUtils {
     }
 
     matchJiraIssues(string) {
-        const regex = /(minted\.atlassian\.net\/browse\/\w+-\d+)/g;
+        const regex = /\[(\w+-\d+)\]\(.*(minted\.atlassian\.net\/browse\/\w+-\d+)\)/g;
+        const urlMatcher = 'minted.atlassian.net/browse/'
         let jiraIssues;
     
         try {
             jiraIssues = string.match(regex);
+            if (jiraIssues) {
+                jiraIssues = jiraIssues.map(issue => issue.slice(issue.indexOf(urlMatcher), -1));
+            }
         } catch (err) {
             console.log(err);
             return null;
         }
         
+        
+
         console.log('Matched Jira Issue Links in Github Commit: ' + jiraIssues);
 
         return [...new Set(jiraIssues)]; // filter out duplicate issues
     }
     
-    // attempt to fetch a Jira issue by a jira.mntd.net/browse
-    // or by a jira.mntd.net/rest/api/2 url
+    // attempt to fetch a Jira issue by a minted.atlassian.net/browse
+    // or by a minted.atlassian.net/rest/api/2 url
 
     async getIssueByURL(url) {
         let key = url.substr(url.lastIndexOf('/') + 1);

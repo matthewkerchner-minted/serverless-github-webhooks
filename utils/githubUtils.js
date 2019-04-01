@@ -49,7 +49,7 @@ const includesJiraIssueCheck = async (pullRequestBody) => {
             url,
             'Jira Issue Link Check',
             'error',
-            'We couldn\'t find any Jira Issue Links in your pull request.',
+            'We couldn\'t find any Jira Issue Links in your pull request. Example: [SRE-123](minted.atlassian.net/browse/SRE-123)',
         );
 
         return null;
@@ -119,11 +119,12 @@ const lateMergeCheck = async (pullRequestBody, jiraIssues) => {
         let unapproved = lateMerges.filter(issue => !issue.fields.labels.includes('late_merge_approved'));
 
         if (unapproved.length > 0) {
+            let unapproved_keys = unapproved.map(issue => issue.key);
             return postStatus(
                 url,
                 'Late Merge Check',
                 'error',
-                `${unapproved.length} issues have not yet been approved for late merge.`,
+                `${unapproved.length} issues have not yet been approved for late merge. ${unapproved_keys}`,
             );
         } else {
             return postStatus(
