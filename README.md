@@ -21,8 +21,8 @@ TODO: Use AWS SSM for secret management.
 
 - JIRA_USER
     - A valid Minted Jira username. The `jiraUtils.js` utility uses this username to authenticate API calls to jira.mntd.net
-- JIRA_PASS
-    - The password for the above JIRA_USER. We will use this in conjunction with the username to authenticate API calls.
+- JIRA_TOKEN
+    - A valid Jira API token for the above user. We will use this in conjunction with the username to authenticate API calls.
     - TODO: Authenticate via OAUTH.
 
 
