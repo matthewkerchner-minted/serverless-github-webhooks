@@ -37,8 +37,6 @@ const getPullRequestFromIssue = async (issue) => {
 const includesJiraIssueCheck = async (pullRequestBody) => {
     const url = pullRequestBody.statuses_url;
     await pendingChecks(url, 'Jira Issue Link Check');
-
-    
     const jiraKeys = jira.matchJiraIssues(pullRequestBody.body);
     let jiraIssues;
 
@@ -51,7 +49,6 @@ const includesJiraIssueCheck = async (pullRequestBody) => {
             'error',
             'We couldn\'t find any Jira Issue Links in your pull request. Example: [SRE-123](minted.atlassian.net/browse/SRE-123)',
         );
-
         return null;
     }
 
@@ -83,26 +80,12 @@ const includesJiraIssueCheck = async (pullRequestBody) => {
 
 const lateMergeCheck = async (pullRequestBody, jiraIssues) => {
     const url = pullRequestBody.statuses_url;
-    
-    /*
-        If the pull request is not targeting a release branch, we don't need to
-        check for late merge tags and approvals.
 
-        07/13/18: removed status check for non-release branches
-                  to avoid clutter on GitHub
-    */
     if (!pullRequestBody.base.label.includes('release')) {
         return null;
-        // return postStatus(
-            //     url,
-            //     'Late Merge Check',
-            //     'Not a release branch, ignoring late merge tags.',
-        //     'success',
-        // );
     }
 
     await pendingChecks(url, 'Late Merge Check');
-
     if (!jiraIssues) {
         return postStatus(
             url,
@@ -136,9 +119,6 @@ const lateMergeCheck = async (pullRequestBody, jiraIssues) => {
         }
     }
 
-    // If the PR is targeting the release branch, includes Jira issue links, and
-    // does NOT have any late merge tags associated, we need to block the issue and ask
-    // the dev to associate it with a late merge tag.
     return postStatus(
         url,
         'Late Merge Check',
@@ -153,24 +133,24 @@ const pendingChecks = async (url, context) => {
 }
 
 const postStatus = async (url, context, status, message) => {
-  return axios.post(
-    url,
-    {
-      state: status,
-      description: message,
-      context,
-    },
-    {
-      headers: {
-        Accept: 'application/vnd.github.v3+json',
-        Authorization: `token ${ghToken}`,
-      },
-    },
-  ).then(data => {
-    console.log('Successfully created status!', {status, message, context});
-  }).catch(err => {
-      console.log(err);
-  });
+    return axios.post(
+        url,
+        {
+            state: status,
+            description: message,
+            context,
+        },
+        {
+            headers: {
+                Accept: 'application/vnd.github.v3+json',
+                Authorization: `token ${ghToken}`,
+            },
+        },
+    ).then(data => {
+        console.log('Successfully created status!', {status, message, context});
+    }).catch(err => {
+        console.log(err);
+    });
 };
 
 module.exports = {

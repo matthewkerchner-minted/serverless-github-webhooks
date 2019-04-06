@@ -97,6 +97,29 @@ class JiraUtils {
         return res ? res.data : null;
     }
 
+    async editIssueLabels(issueKey, labels) {
+        if (typeof key !== 'string') {
+            console.log('Invalid Jira Issue Key: ' + key);
+            return null;
+        }
+        
+        // {"update":{"labels":[{"add":"test"}]}}
+        let data = {
+            update: {
+                labels
+            }
+        }
+
+        try {
+            let response = await this.client.put(`issue/${key}`);
+            let data = response.data
+            return data;
+        } catch (err) {
+            console.log(err);
+            return null;
+        }
+    }
+
     matchJiraIssues(string) {
         const regex = /\[(\w+-\d+)\]\(.*(minted\.atlassian\.net\/browse\/\w+-\d+)\)/g;
         const urlMatcher = 'minted.atlassian.net/browse/'
@@ -121,7 +144,6 @@ class JiraUtils {
     
     // attempt to fetch a Jira issue by a minted.atlassian.net/browse
     // or by a minted.atlassian.net/rest/api/2 url
-
     async getIssueByURL(url) {
         let key = url.substr(url.lastIndexOf('/') + 1);
         return this.getIssueByKey(key);
