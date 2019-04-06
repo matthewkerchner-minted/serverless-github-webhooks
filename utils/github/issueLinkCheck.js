@@ -1,3 +1,7 @@
+const { pendingChecks, postStatus } = require('./postStatus');
+const JiraUtils = require('../jira/index.js');
+const jira = new JiraUtils();
+
 const includesJiraIssueCheck = async (pullRequestBody) => {
     const url = pullRequestBody.statuses_url;
     await pendingChecks(url, 'Jira Issue Link Check');

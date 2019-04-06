@@ -1,3 +1,6 @@
+const axios = require('axios');
+const ghToken = process.env.GH_TOKEN;
+
 const pendingChecks = async (url, context) => {
     // Post 'in progress' status to github. Should be overwritten almost immediately by success/failure status checks.
     return postStatus(url, context, 'pending', 'Hang on while we check your commit!');
