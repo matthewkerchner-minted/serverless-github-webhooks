@@ -5,6 +5,7 @@ const { decodeURI, getPullRequestFromIssue } = require('./github/pullRequestData
 
 module.exports = {
     decodeURI,
+    pendingChecks,
     postStatus,
     lateMergeCheck,
     includesJiraIssueCheck,
