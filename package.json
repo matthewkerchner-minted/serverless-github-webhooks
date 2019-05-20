@@ -7,7 +7,9 @@
     "deploy": "serverless deploy",
     "ghlivetest": "serverless invoke -f githubWebhookListener -p ./test/urlEncodedRequest.json",
     "ghlocaltest": "serverless invoke local -f githubWebhookListener -p ./test/urlEncodedRequest.json",
-    "logs": "serverless logs -f githubWebhookListener -t"
+    "logs": "serverless logs -f githubWebhookListener -t",
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
   },
   "author": "Matthew Kerchner",
   "license": "MIT",
@@ -16,10 +18,12 @@
     "axios": "^0.18.0",
     "axios-logger": "^1.0.0",
     "moment": "^2.22.2",
-    "npm": "^6.7.0"
+    "npm": "^6.7.0",
+    "snyk": "^1.165.1"
   },
   "devDependencies": {
     "serverless": "^1.38.0",
     "serverless-plugin-tracing": "^2.0.0"
-  }
+  },
+  "snyk": true
 }
